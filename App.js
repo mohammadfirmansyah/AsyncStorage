@@ -7,14 +7,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const App = () => {
   const [inputValue, setInputValue] = useState('');
   const [storedValue, setStoredValue] = useState('');
+  const [secondInputValue, setSecondInputValue] = useState('');
+  const [secondStoredValue, setSecondStoredValue] = useState('');
 
   useEffect(() => {
     getData();
+    getSecondData();
   }, []);
 
-  const storeData = async (value) => {
+  const storeData = async (key, value) => {
     try {
-      await AsyncStorage.setItem('@storage_Key', value);
+      await AsyncStorage.setItem(key, value);
       console.log('Data stored successfully');
     } catch (e) {
       console.error('Failed to save data', e);
@@ -33,10 +36,22 @@ const App = () => {
     }
   };
 
-  const clearData = async () => {
+  const getSecondData = async () => {
     try {
-      await AsyncStorage.removeItem('@storage_Key');
-      setStoredValue('');
+      const value = await AsyncStorage.getItem('@storage_Key_2');
+      if (value !== null) {
+        setSecondStoredValue(value);
+        console.log('Second data retrieved successfully');
+      }
+    } catch (e) {
+      console.error('Failed to retrieve second data', e);
+    }
+  };
+
+  const clearData = async (key, setValue) => {
+    try {
+      await AsyncStorage.removeItem(key);
+      setValue('');
       console.log('Data cleared successfully');
     } catch (e) {
       console.error('Failed to clear data', e);
@@ -46,6 +61,8 @@ const App = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>AsyncStorage Example</Text>
+      <Text style={styles.text} testID='storedId'>Stored Value: {storedValue}</Text>
+      <Text style={styles.text} testID='secondStoredId'>Second Stored Value: {secondStoredValue}</Text>
 
       <TextInput
         style={styles.input}
@@ -53,12 +70,26 @@ const App = () => {
         value={inputValue}
         onChangeText={setInputValue}
       />
+       <TextInput
+        style={styles.input}
+        placeholder="Enter something else..."
+        value={secondInputValue}
+        onChangeText={setSecondInputValue}
+      />
       <View style={styles.spacer} >
-        <Button title="Store Data" onPress={() => storeData(inputValue)} testID='storeData'/>
-        <Button title="Retrieve Data" onPress={getData} testID='retrieveData'/>
-        <Button title="Clear Data" onPress={clearData} testID='clearData'/>
+        <Button title="Store Data" onPress={() => {
+          storeData('@storage_Key', inputValue);
+          storeData('@storage_Key_2', secondInputValue);
+        }} testID='storeData'/>
+        <Button title="Retrieve Data" onPress={() => {
+          getData();
+          getSecondData();
+        }} testID='retrieveData'/>
+        <Button title="Clear Data" onPress={() => {
+          clearData('@storage_Key', setStoredValue);
+          clearData('@storage_Key_2', setSecondStoredValue);
+        }} testID='clearData'/>
       </View>
-      <Text style={styles.text} testID='storedId'>Stored Value: {storedValue}</Text>
     </View>
   );
 };
